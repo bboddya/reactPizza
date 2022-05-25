@@ -26,7 +26,7 @@ function Sort(props) {
             fill="#2C2C2C"
           />
         </svg>
-        <b>Сортировка по:</b>
+        <b>Сортировка по: </b>
         <span onClick={() => setOpen(!open)}>{sortName}</span>
       </div>
 
