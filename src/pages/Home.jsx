@@ -1,4 +1,8 @@
 import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
+
+import { setCategoryId, setCurrentPage } from '../redux/slices/filterSlice';
 
 import Categories from '../components/Categories';
 import PizzaItem from '../components/PizzaBlock';
@@ -9,16 +13,22 @@ import Pagination from '../components/Pagination';
 import { SearchContext } from '../App';
 
 const Home = () => {
+  const dispatch = useDispatch();
+  const { categoryId, sortType, currentPage } = useSelector((state) => state.filter);
+
   // хранение состояния
   const { searchValue } = React.useContext(SearchContext);
   const [items, setItems] = React.useState([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [сategoryId, setCategoryId] = React.useState(0);
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const [sortType, setSortType] = React.useState({
-    name: 'популярности',
-    sortProperty: 'rating',
-  });
+
+  const onChangeCategory = (id) => {
+    // вызов экшена setCategoryId через функцию хука dispatch
+    dispatch(setCategoryId(id));
+  };
+
+  const onChangePage = (numder) => {
+    dispatch(setCurrentPage(numder));
+  };
 
   // если в аргумент массива пустой, то функция выполнится только после первого рендера
   // [items] - функция выполнится на каждое изменение переменной items
@@ -27,22 +37,21 @@ const Home = () => {
 
     const sortBy = sortType.sortProperty.replace('-', '');
     const order = sortType.sortProperty.includes('-') ? 'asc' : 'desc';
-    const category = сategoryId > 0 ? `category=${сategoryId}` : '';
+    const category = categoryId > 0 ? `category=${categoryId}` : '';
     const search = searchValue ? `&search=${searchValue}` : '';
 
-    fetch(
-      `https://62910af627f4ba1c65c70178.mockapi.io/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}${search}`,
-    )
-      .then((res) => res.json())
+    axios
+      .get(
+        `https://62910af627f4ba1c65c70178.mockapi.io/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}${search}`,
+      )
       .then((res) => {
-        setItems(res);
+        setItems(res.data);
         setIsLoading(false);
       })
       .catch((e) => {
         console.log(e);
       });
-    window.scrollTo(0, 0);
-  }, [сategoryId, sortType, searchValue, currentPage]);
+  }, [categoryId, sortType, searchValue, currentPage]);
 
   const pizzas = items.map((item) => <PizzaItem key={item.id} {...item} />);
 
@@ -51,16 +60,16 @@ const Home = () => {
   return (
     <>
       <div className="content__top">
-        <Categories value={сategoryId} onClickCategory={(id) => setCategoryId(id)} />
+        <Categories value={categoryId} onClickCategory={(id) => onChangeCategory(id)} />
 
-        <Sort value={sortType} onClickSort={(id) => setSortType(id)} />
+        <Sort />
       </div>
 
       <h2 className="content__title">Все пиццы</h2>
 
       <div className="content__items">{isLoading ? skeletons : pizzas}</div>
 
-      <Pagination onChangePage={(number) => setCurrentPage(number)} />
+      <Pagination currentPage={currentPage} onChangePage={onChangePage} />
     </>
   );
 };

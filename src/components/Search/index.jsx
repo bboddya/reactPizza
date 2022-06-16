@@ -1,11 +1,32 @@
 import React from 'react';
+import { SearchContext } from '../../App';
+import debounce from 'lodash.debounce';
 
 import styles from './Search.module.scss';
 
-import { SearchContext } from '../../App';
-
 const Search = () => {
-  const { searchValue, setSearchValue } = React.useContext(SearchContext);
+  const [value, setValue] = React.useState('');
+  const { setSearchValue } = React.useContext(SearchContext);
+  const inputRef = React.useRef();
+
+  const onClickClear = () => {
+    setSearchValue('');
+    setValue('');
+    inputRef.current.focus();
+  };
+
+  // хук useCallback вызывает запомненный колбэк. Если этого не сделать, то будет происходить ререндер на каждое действие, тк функция самого компонента будет вызываться снова и снова
+  const updateSearchValue = React.useCallback(
+    debounce((str) => {
+      setSearchValue(str);
+    }, 1000),
+    [], // колбэк пересохраняется при изменении отслеживаемых переменных. Если массив пустой, то 1 раз
+  );
+
+  const onChangeInput = (event) => {
+    setValue(event.target.value);
+    updateSearchValue(event.target.value);
+  };
 
   return (
     <div className={styles.root}>
@@ -44,14 +65,15 @@ const Search = () => {
         />
       </svg>
       <input
+        ref={inputRef}
         className={styles.input}
         placeholder="Поиск пиццы..."
-        onChange={(event) => setSearchValue(event.target.value)}
-        value={searchValue} // рекомендуется сохранять изменяемые значения инпута в value, чтобы инпут стал конктролируемым
+        onChange={onChangeInput}
+        value={value} // рекомендуется сохранять изменяемые значения инпута в value, чтобы инпут стал конктролируемым
       />
-      {searchValue && (
+      {value && (
         <svg
-          onClick={() => setSearchValue('')}
+          onClick={onClickClear}
           className={styles.clearIcon}
           viewBox="0 0 20 20"
           xmlns="http://www.w3.org/2000/svg"

@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Cart from './pages/Cart';
 import NotFound from './pages/NotFound';
 
+// создание сontext происходит на верхнем уровне, чтобы точечно передать данные в дочерний компонент без Props Drilling
 export const SearchContext = React.createContext();
 
 function App() {
