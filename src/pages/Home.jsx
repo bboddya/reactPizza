@@ -1,19 +1,21 @@
 import React from 'react';
+import qs from 'qs';
 import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-import { setCategoryId, setCurrentPage } from '../redux/slices/filterSlice';
+import { Categories, Sort, PizzaBlock, Skeleton, Pagination, sortList } from '../components';
 
-import Categories from '../components/Categories';
-import PizzaItem from '../components/PizzaBlock';
-import Sort from '../components/Sort';
-import Sceleton from '../components/PizzaBlock/Sceleton';
-import Pagination from '../components/Pagination';
+import { setCategoryId, setCurrentPage, setFilters } from '../redux/slices/filterSlice';
 
 import { SearchContext } from '../App';
 
 const Home = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const isSearch = React.useRef(false);
+  const isMounted = React.useRef(false);
+
   const { categoryId, sortType, currentPage } = useSelector((state) => state.filter);
 
   // хранение состояния
@@ -30,32 +32,72 @@ const Home = () => {
     dispatch(setCurrentPage(numder));
   };
 
-  // если в аргумент массива пустой, то функция выполнится только после первого рендера
-  // [items] - функция выполнится на каждое изменение переменной items
+  // Если изменили параметры и был первый рендер
   React.useEffect(() => {
-    setIsLoading(true);
-
-    const sortBy = sortType.sortProperty.replace('-', '');
-    const order = sortType.sortProperty.includes('-') ? 'asc' : 'desc';
-    const category = categoryId > 0 ? `category=${categoryId}` : '';
-    const search = searchValue ? `&search=${searchValue}` : '';
-
-    axios
-      .get(
-        `https://62910af627f4ba1c65c70178.mockapi.io/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}${search}`,
-      )
-      .then((res) => {
-        setItems(res.data);
-        setIsLoading(false);
-      })
-      .catch((e) => {
-        console.log(e);
+    if (isMounted.current) {
+      const queryString = qs.stringify({
+        sortProperty: sortType.sortProperty,
+        categoryId,
+        currentPage,
       });
-  }, [categoryId, sortType, searchValue, currentPage]);
 
-  const pizzas = items.map((item) => <PizzaItem key={item.id} {...item} />);
+      navigate(`?${queryString}`);
+    }
+    isMounted.current = true;
+  }, [categoryId, sortType.sortProperty, currentPage]);
 
-  const skeletons = [...new Array(6)].map((_, index) => <Sceleton key={index} />);
+  // Если был первый рендер, то проверяем URl-параметры и сохраняем в редуксе
+  React.useEffect(() => {
+    if (
+      window.location.search &&
+      window.location.search !== '?sortProperty=rating&categoryId=0&currentPage=1'
+    ) {
+      const params = qs.parse(window.location.search.substring(1));
+
+      const sort = sortList.find((obj) => obj.sortProperty === params.sortProperty);
+
+      dispatch(
+        setFilters({
+          ...params,
+          sort,
+        }),
+      );
+      isSearch.current = true;
+    }
+  }, []);
+
+  // Если был первый рендер, то запрашиваем пиццы
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+
+    const fetchPizzas = () => {
+      setIsLoading(true);
+
+      const sortBy = sortType.sortProperty.replace('-', '');
+      const order = sortType.sortProperty.includes('-') ? 'asc' : 'desc';
+      const category = categoryId > 0 ? `category=${categoryId}` : '';
+      const search = searchValue ? `search=${searchValue}` : '';
+
+      axios
+        .get(
+          `https://626d16545267c14d5677d9c2.mockapi.io/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}&${search}`,
+        )
+        .then((res) => {
+          setItems(res.data);
+          setIsLoading(false);
+        });
+    };
+
+    if (!isSearch.current) {
+      fetchPizzas();
+    }
+
+    isSearch.current = false;
+  }, [categoryId, sortType.sortProperty, searchValue, currentPage]);
+
+  const pizzas = items.map((item) => <PizzaBlock key={item.id} {...item} />);
+
+  const skeletons = [...new Array(6)].map((_, index) => <Skeleton key={index} />);
 
   return (
     <>

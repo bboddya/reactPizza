@@ -3,45 +3,60 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { setSortType } from '../redux/slices/filterSlice';
 
-function Sort() {
+export const sortList = [
+  {
+    name: 'популярности (desc)',
+    sortProperty: 'rating',
+  },
+  {
+    name: 'популярности (asc)',
+    sortProperty: '-rating',
+  },
+  {
+    name: 'цене (desc)',
+    sortProperty: 'price',
+  },
+  {
+    name: 'цене (asc)',
+    sortProperty: '-price',
+  },
+  {
+    name: 'алфавиту (desc)',
+    sortProperty: 'title',
+  },
+  {
+    name: 'алфавиту (asc)',
+    sortProperty: '-title',
+  },
+];
+
+export const Sort = () => {
   const dispatch = useDispatch();
   const sortType = useSelector((state) => state.filter.sortType);
+  const sortRef = React.useRef();
 
   const [open, setOpen] = React.useState(false);
-  const list = [
-    {
-      name: 'популярности (desc)',
-      sortProperty: 'rating',
-    },
-    {
-      name: 'популярности (asc)',
-      sortProperty: '-rating',
-    },
-    {
-      name: 'цене (desc)',
-      sortProperty: 'price',
-    },
-    {
-      name: 'цене (asc)',
-      sortProperty: '-price',
-    },
-    {
-      name: 'алфавиту (desc)',
-      sortProperty: 'title',
-    },
-    {
-      name: 'алфавиту (asc)',
-      sortProperty: '-title',
-    },
-  ];
 
   const onClickSelect = (item) => {
     dispatch(setSortType(item));
     setOpen(!open);
   };
 
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.path.includes(sortRef.current)) {
+        setOpen(false);
+      }
+    };
+
+    document.body.addEventListener('click', handleClickOutside);
+
+    // уничтожение функции при уничтожении компонента
+    return () => document.body.removeEventListener('click', handleClickOutside);
+  });
+
   return (
-    <div className="sort">
+    <div ref={sortRef} className="sort">
       <div className="sort__label">
         <svg
           width="10"
@@ -62,7 +77,7 @@ function Sort() {
       {open && (
         <div className="sort__popup">
           <ul>
-            {list.map((item, i) => (
+            {sortList.map((item, i) => (
               <li
                 key={i}
                 onClick={() => onClickSelect(item)}
@@ -76,6 +91,4 @@ function Sort() {
       )}
     </div>
   );
-}
-
-export default Sort;
+};
