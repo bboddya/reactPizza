@@ -70,7 +70,7 @@ const Home = () => {
   React.useEffect(() => {
     window.scrollTo(0, 0);
 
-    const fetchPizzas = () => {
+    const fetchPizzas = async () => {
       setIsLoading(true);
 
       const sortBy = sortType.sortProperty.replace('-', '');
@@ -78,14 +78,17 @@ const Home = () => {
       const category = categoryId > 0 ? `category=${categoryId}` : '';
       const search = searchValue ? `search=${searchValue}` : '';
 
-      axios
-        .get(
+      try {
+        const res = await axios.get(
           `https://626d16545267c14d5677d9c2.mockapi.io/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}&${search}`,
-        )
-        .then((res) => {
-          setItems(res.data);
-          setIsLoading(false);
-        });
+        );
+
+        setItems(res.data);
+      } catch (e) {
+        console.log(e);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     if (!isSearch.current) {
