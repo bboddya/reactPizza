@@ -1,16 +1,17 @@
 import React from 'react';
-import { SearchContext } from '../../App';
 import debounce from 'lodash.debounce';
 
 import styles from './Search.module.scss';
+import { useDispatch } from 'react-redux';
+import { setSearchValue } from '../../redux/slices/filterSlice';
 
 const Search = () => {
+  const dispatch = useDispatch();
   const [value, setValue] = React.useState('');
-  const { setSearchValue } = React.useContext(SearchContext);
   const inputRef = React.useRef();
 
   const onClickClear = () => {
-    setSearchValue('');
+    dispatch(setSearchValue(''));
     setValue('');
     inputRef.current.focus();
   };
@@ -18,8 +19,8 @@ const Search = () => {
   // хук useCallback вызывает запомненный колбэк. Если этого не сделать, то будет происходить ререндер на каждое действие, тк функция самого компонента будет вызываться снова и снова
   const updateSearchValue = React.useCallback(
     debounce((str) => {
-      setSearchValue(str);
-    }, 1000),
+      dispatch(setSearchValue(str));
+    }, 150),
     [], // колбэк пересохраняется при изменении отслеживаемых переменных. Если массив пустой, то 1 раз
   );
 
