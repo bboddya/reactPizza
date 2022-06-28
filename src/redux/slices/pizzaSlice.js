@@ -8,8 +8,6 @@ export const fetchPizzas = createAsyncThunk(
       `https://626d16545267c14d5677d9c2.mockapi.io/items?page=${currentPage}&limit=4&${category}&sortBy=${sortBy}&order=${order}&${search}`,
     );
 
-    console.log(data);
-
     return data;
   },
 );
