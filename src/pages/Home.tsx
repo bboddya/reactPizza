@@ -13,7 +13,7 @@ import {
 } from '../redux/slices/filterSlice';
 import { fetchPizzas, selectPizzaData } from '../redux/slices/pizzaSlice';
 
-const Home = () => {
+const Home: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isSearch = React.useRef(false);
@@ -22,13 +22,13 @@ const Home = () => {
   const { categoryId, sortType, currentPage, searchValue } = useSelector(selectFilter);
   const { items, status } = useSelector(selectPizzaData);
 
-  const onChangeCategory = (id) => {
+  const onChangeCategory = (index: number) => {
     // вызов экшена setCategoryId через функцию хука dispatch
-    dispatch(setCategoryId(id));
+    dispatch(setCategoryId(index));
   };
 
-  const onChangePage = (numder) => {
-    dispatch(setCurrentPage(numder));
+  const onChangePage = (page: number) => {
+    dispatch(setCurrentPage(page));
   };
 
   // Если изменили параметры и был первый рендер
@@ -76,6 +76,7 @@ const Home = () => {
       const search = searchValue ? `search=${searchValue}` : '';
 
       dispatch(
+        // @ts-ignore
         fetchPizzas({
           sortBy,
           order,
@@ -93,14 +94,14 @@ const Home = () => {
     isSearch.current = false;
   }, [categoryId, sortType.sortProperty, searchValue, currentPage]);
 
-  const pizzas = items.map((item) => <PizzaBlock key={item.id} {...item} />);
+  const pizzas = items.map((item: any) => <PizzaBlock key={item.id} {...item} />);
 
   const skeletons = [...new Array(6)].map((_, index) => <Skeleton key={index} />);
 
   return (
     <>
       <div className="content__top">
-        <Categories value={categoryId} onClickCategory={(id) => onChangeCategory(id)} />
+        <Categories value={categoryId} onClickCategory={onChangeCategory} />
 
         <Sort />
       </div>
