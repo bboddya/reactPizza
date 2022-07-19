@@ -1,43 +1,46 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 
-import { setSortType, selectFilter } from '../redux/slices/filterSlice';
+import { setSortType, SortPropertyEnum, Sort } from '../redux/slices/filterSlice';
 
 type SortItem = {
   name: string;
-  sortProperty: string;
+  sortProperty: SortPropertyEnum;
+};
+
+type SortPopupProps = {
+  value: Sort;
 };
 
 export const sortList: SortItem[] = [
   {
     name: 'популярности (desc)',
-    sortProperty: 'rating',
+    sortProperty: SortPropertyEnum.PRICE_DESC,
   },
   {
     name: 'популярности (asc)',
-    sortProperty: '-rating',
+    sortProperty: SortPropertyEnum.RATING_ASC,
   },
   {
     name: 'цене (desc)',
-    sortProperty: 'price',
+    sortProperty: SortPropertyEnum.PRICE_DESC,
   },
   {
     name: 'цене (asc)',
-    sortProperty: '-price',
+    sortProperty: SortPropertyEnum.PRICE_ASC,
   },
   {
     name: 'алфавиту (desc)',
-    sortProperty: 'title',
+    sortProperty: SortPropertyEnum.TITLE_DESC,
   },
   {
     name: 'алфавиту (asc)',
-    sortProperty: '-title',
+    sortProperty: SortPropertyEnum.TITLE_ASC,
   },
 ];
 
-export const Sort: React.FC = () => {
+export const SortPopup: React.FC<SortPopupProps> = React.memo(({ value }) => {
   const dispatch = useDispatch();
-  const { sortType } = useSelector(selectFilter);
   const sortRef = React.useRef<HTMLDivElement>(null);
 
   const [open, setOpen] = React.useState(false);
@@ -76,7 +79,7 @@ export const Sort: React.FC = () => {
           />
         </svg>
         <b>Сортировка по: </b>
-        <span onClick={() => setOpen(!open)}>{sortType.name}</span>
+        <span onClick={() => setOpen(!open)}>{value.name}</span>
       </div>
 
       {open && (
@@ -86,7 +89,7 @@ export const Sort: React.FC = () => {
               <li
                 key={i}
                 onClick={() => onClickSelect(item)}
-                className={sortType.sortProperty === item.sortProperty ? 'active' : ''}
+                className={value.sortProperty === item.sortProperty ? 'active' : ''}
               >
                 {item.name}
               </li>
@@ -96,4 +99,4 @@ export const Sort: React.FC = () => {
       )}
     </div>
   );
-};
+});

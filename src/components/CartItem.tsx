@@ -25,11 +25,11 @@ export const CartItem: React.FC<CartItemProps> = ({
   const dispatch = useDispatch();
 
   const onClickPlus = () => {
-    dispatch(addItem({ id }));
+    dispatch(addItem({ id } as CartItemProps));
   };
 
   const onClickMinus = () => {
-    dispatch(minusItem({ id }));
+    dispatch(minusItem(id));
   };
 
   const delItem = () => {
@@ -50,7 +50,7 @@ export const CartItem: React.FC<CartItemProps> = ({
       </div>
 
       <div className="cart__item-count">
-        <div
+        <button
           onClick={onClickMinus}
           className="button button--outline button--circle cart__item-count-minus"
         >
@@ -70,11 +70,12 @@ export const CartItem: React.FC<CartItemProps> = ({
               fill="#EB5A1E"
             />
           </svg>
-        </div>
+        </button>
 
         <b>{count}</b>
 
-        <div
+        <button
+          disabled={count === 1}
           onClick={onClickPlus}
           className="button button--outline button--circle cart__item-count-plus"
         >
@@ -94,7 +95,7 @@ export const CartItem: React.FC<CartItemProps> = ({
               fill="#EB5A1E"
             />
           </svg>
-        </div>
+        </button>
       </div>
 
       <div className="cart__item-price">

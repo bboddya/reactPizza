@@ -1,97 +1,52 @@
 import React from 'react';
-import qs from 'qs';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+// import { useNavigate } from 'react-router-dom';
 
-import { Categories, Sort, PizzaBlock, Skeleton, Pagination, sortList } from '../components';
+import { Categories, SortPopup, PizzaBlock, Skeleton, Pagination } from '../components';
 
-import {
-  setCategoryId,
-  setCurrentPage,
-  setFilters,
-  selectFilter,
-} from '../redux/slices/filterSlice';
+import { setCategoryId, setCurrentPage, selectFilter } from '../redux/slices/filterSlice';
 import { fetchPizzas, selectPizzaData } from '../redux/slices/pizzaSlice';
+import { useAppDispatch } from '../redux/store';
 
 const Home: React.FC = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const isSearch = React.useRef(false);
-  const isMounted = React.useRef(false);
+  const dispatch = useAppDispatch();
+  // const navigate = useNavigate();
+  // const isSearch = React.useRef(false);
+  // const isMounted = React.useRef(false);
 
   const { categoryId, sortType, currentPage, searchValue } = useSelector(selectFilter);
   const { items, status } = useSelector(selectPizzaData);
 
-  const onChangeCategory = (index: number) => {
+  const onChangeCategory = React.useCallback((index: number) => {
     // вызов экшена setCategoryId через функцию хука dispatch
     dispatch(setCategoryId(index));
-  };
+  }, []);
 
   const onChangePage = (page: number) => {
     dispatch(setCurrentPage(page));
   };
 
-  // Если изменили параметры и был первый рендер
-  React.useEffect(() => {
-    if (isMounted.current) {
-      const queryString = qs.stringify({
-        sortProperty: sortType.sortProperty,
-        categoryId,
-        currentPage,
-      });
+  const getPizzas = async () => {
+    const sortBy = sortType.sortProperty.replace('-', '');
+    const order = sortType.sortProperty.includes('-') ? 'asc' : 'desc';
+    const category = categoryId > 0 ? `category=${categoryId}` : '';
+    const search = searchValue ? `search=${searchValue}` : '';
 
-      navigate(`?${queryString}`);
-    }
-    isMounted.current = true;
-  }, [categoryId, sortType.sortProperty, currentPage]);
-
-  // Если был первый рендер, то проверяем URl-параметры и сохраняем в редуксе
-  React.useEffect(() => {
-    if (
-      window.location.search &&
-      window.location.search !== '?sortProperty=rating&categoryId=0&currentPage=1'
-    ) {
-      const params = qs.parse(window.location.search.substring(1));
-
-      const sort = sortList.find((obj) => obj.sortProperty === params.sortProperty);
-
-      dispatch(
-        setFilters({
-          ...params,
-          sort,
-        }),
-      );
-      isSearch.current = true;
-    }
-  }, []);
+    dispatch(
+      // @ts-ignore
+      fetchPizzas({
+        sortBy,
+        order,
+        category,
+        search,
+        currentPage: String(currentPage),
+      }),
+    );
+  };
 
   // Если был первый рендер, то запрашиваем пиццы
   React.useEffect(() => {
-    window.scrollTo(0, 0);
-
-    const getPizzas = async () => {
-      const sortBy = sortType.sortProperty.replace('-', '');
-      const order = sortType.sortProperty.includes('-') ? 'asc' : 'desc';
-      const category = categoryId > 0 ? `category=${categoryId}` : '';
-      const search = searchValue ? `search=${searchValue}` : '';
-
-      dispatch(
-        // @ts-ignore
-        fetchPizzas({
-          sortBy,
-          order,
-          category,
-          search,
-          currentPage,
-        }),
-      );
-    };
-
-    if (!isSearch.current) {
-      getPizzas();
-    }
-
-    isSearch.current = false;
+    getPizzas();
   }, [categoryId, sortType.sortProperty, searchValue, currentPage]);
 
   const pizzas = items.map((item: any) => <PizzaBlock key={item.id} {...item} />);
@@ -103,12 +58,12 @@ const Home: React.FC = () => {
       <div className="content__top">
         <Categories value={categoryId} onClickCategory={onChangeCategory} />
 
-        <Sort />
+        <SortPopup value={sortType} />
       </div>
 
       <h2 className="content__title">Все пиццы</h2>
 
-      {status === 'err' ? (
+      {status === 'error' ? (
         <div className="content__error-info">
           <h2>Произошла ошибка 😕</h2>
           <p>К сожалению, не удалось получить питсы. Попробуйте повторить попытку позже.</p>
