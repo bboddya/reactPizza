@@ -1,57 +1,59 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-// import { useNavigate } from 'react-router-dom';
 
 import { Categories, SortPopup, PizzaBlock, Skeleton, Pagination } from '../components';
+import { selectFilter } from '../redux/filter/selectors';
+import { setCategoryId, setCurrentPage } from '../redux/filter/slice';
+import { fetchPizzas } from '../redux/pizza/asyncActions';
+import { selectPizzaData } from '../redux/pizza/selectors';
 
-import { setCategoryId, setCurrentPage, selectFilter } from '../redux/slices/filterSlice';
-import { fetchPizzas, selectPizzaData } from '../redux/slices/pizzaSlice';
 import { useAppDispatch } from '../redux/store';
 
 const Home: React.FC = () => {
   const dispatch = useAppDispatch();
-  // const navigate = useNavigate();
-  // const isSearch = React.useRef(false);
-  // const isMounted = React.useRef(false);
 
   const { categoryId, sortType, currentPage, searchValue } = useSelector(selectFilter);
   const { items, status } = useSelector(selectPizzaData);
 
-  const onChangeCategory = React.useCallback((index: number) => {
-    // вызов экшена setCategoryId через функцию хука dispatch
-    dispatch(setCategoryId(index));
-  }, []);
+  const onChangeCategory = React.useCallback(
+    (index: number) => {
+      // вызов экшена setCategoryId через функцию хука dispatch
+      dispatch(setCategoryId(index));
+    },
+    [dispatch],
+  );
 
   const onChangePage = (page: number) => {
     dispatch(setCurrentPage(page));
   };
 
-  const getPizzas = async () => {
-    const sortBy = sortType.sortProperty.replace('-', '');
-    const order = sortType.sortProperty.includes('-') ? 'asc' : 'desc';
-    const category = categoryId > 0 ? `category=${categoryId}` : '';
-    const search = searchValue ? `search=${searchValue}` : '';
-
-    dispatch(
-      // @ts-ignore
-      fetchPizzas({
-        sortBy,
-        order,
-        category,
-        search,
-        currentPage: String(currentPage),
-      }),
-    );
-  };
-
   // Если был первый рендер, то запрашиваем пиццы
   React.useEffect(() => {
+    const getPizzas = async () => {
+      const sortBy = sortType.sortProperty.replace('-', '');
+      const order = sortType.sortProperty.includes('-') ? 'asc' : 'desc';
+      const category = categoryId > 0 ? `category=${categoryId}` : '';
+      const search = searchValue ? `search=${searchValue}` : '';
+
+      dispatch(
+        fetchPizzas({
+          sortBy,
+          order,
+          category,
+          search,
+          currentPage: String(currentPage),
+        }),
+      );
+
+      window.scrollTo(0, 0);
+    };
+
     getPizzas();
-  }, [categoryId, sortType.sortProperty, searchValue, currentPage]);
+  }, [categoryId, sortType.sortProperty, searchValue, currentPage, dispatch]);
 
   const pizzas = items.map((item: any) => <PizzaBlock key={item.id} {...item} />);
 
-  const skeletons = [...new Array(6)].map((_, index) => <Skeleton key={index} />);
+  const skeletons = [...new Array(4)].map((_, index) => <Skeleton key={index} />);
 
   return (
     <>
